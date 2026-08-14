@@ -37,6 +37,33 @@ function ProfileHandler(db) {
         });
     };
 
+    // CWE-639: Authorization Bypass Through User-Controlled Key (IDOR)
+    // The userId used to look up the record is taken directly from the URL
+    // route param instead of the authenticated session, and there is no
+    // check that the requesting user (req.session.userId) is allowed to
+    // view the requested profile. Any logged-in user can enumerate
+    // /profile/view/:userId to read another user's PII (ssn, dob, bank
+    // account/routing info).
+    this.viewProfileById = (req, res, next) => {
+        const {
+            userId
+        } = req.params;
+
+        // Fix for CWE-639 - verify the requested userId matches the
+        // authenticated user's session (or that the session user has
+        // explicit authorization to view this record) before returning data.
+        // if (req.session.userId != userId) {
+        //     return res.status(403).render("error", { message: "Not authorized to view this profile" });
+        // }
+
+        profile.getByUserId(parseInt(userId), (err, doc) => {
+            if (err) return next(err);
+            if (!doc) return next(new Error("User not found"));
+
+            return res.json(doc);
+        });
+    };
+
     this.handleProfileUpdate = (req, res, next) => {
 
         const {

@@ -47,6 +47,10 @@ const index = (app, db) => {
     app.get("/profile", isLoggedIn, profileHandler.displayProfile);
     app.post("/profile", isLoggedIn, profileHandler.handleProfileUpdate);
 
+    // View another user's profile by id - CWE-639 IDOR: userId comes from the
+    // URL param with no check that it belongs to the logged-in session user
+    app.get("/profile/view/:userId", isLoggedIn, profileHandler.viewProfileById);
+
     // Contributions Page
     app.get("/contributions", isLoggedIn, contributionsHandler.displayContributions);
     app.post("/contributions", isLoggedIn, contributionsHandler.handleContributionsUpdate);
